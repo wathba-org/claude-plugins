@@ -1,0 +1,24 @@
+{
+  "name": "wathba",
+  "owner": {
+    "name": "Wathba",
+    "url": "https://wathba.info"
+  },
+  "metadata": {
+    "description": "Official Wathba (وثبة) plugins for Claude Code",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "wathba",
+      "source": "./plugins/wathba",
+      "description": "Install and operate the Wathba CLI — authenticate, activate services (OTP, payments, shipping), integrate capabilities, manage API keys. Understands Arabic and English prompts and replies in the user's language.",
+      "author": {
+        "name": "Wathba",
+        "url": "https://wathba.info"
+      },
+      "keywords": ["wathba", "وثبة", "cli", "arabic", "payments", "otp", "shipping"],
+      "category": "developer-tools"
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "name": "wathba",
+  "version": "1.0.0",
+  "description": "Install and operate the Wathba CLI — authenticate, activate services (OTP, payments, shipping), integrate capabilities, manage API keys. Understands Arabic and English prompts and replies in the user's language.",
+  "author": {
+    "name": "Wathba",
+    "url": "https://wathba.info"
+  },
+  "homepage": "https://github.com/wathba-org/wathba-skill",
+  "repository": "https://github.com/wathba-org/claude-plugins",
+  "license": "Apache-2.0",
+  "keywords": ["wathba", "وثبة", "cli", "arabic", "payments", "otp", "shipping"]
+}
