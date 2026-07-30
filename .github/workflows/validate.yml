@@ -1,0 +1,61 @@
+name: Validate plugin marketplace
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: plugin-marketplace-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@1e60f620b9541d56bece96c5465dc8ee9832be0b # v4.0.3
+        with:
+          node-version: "24"
+
+      - name: Validate marketplace isolation
+        run: node scripts/validate-marketplace.mjs
+
+      - name: Validate production OAuth metadata when MCP is published
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ ! -f plugins/wathba/.mcp.json ]]; then
+            echo "Production MCP package is not published yet."
+            exit 0
+          fi
+
+          resource="$(
+            curl --fail --silent --show-error \
+              https://api.wathba.info/.well-known/oauth-protected-resource/mcp
+          )"
+          authorization="$(
+            curl --fail --silent --show-error \
+              https://api.wathba.info/.well-known/oauth-authorization-server
+          )"
+          jq -e '
+            .resource == "https://api.wathba.info/mcp" and
+            .authorization_servers == ["https://api.wathba.info"] and
+            .scopes_supported == ["mcp:read"] and
+            .resource_documentation == "https://platform.wathba.info/docs/mcp"
+          ' <<<"$resource"
+          jq -e '
+            .issuer == "https://api.wathba.info" and
+            .authorization_endpoint == "https://platform.wathba.info/oauth/authorize" and
+            .token_endpoint == "https://api.wathba.info/v1/oauth/token" and
+            .registration_endpoint == "https://api.wathba.info/v1/oauth/register" and
+            .scopes_supported == ["mcp:read"] and
+            (.code_challenge_methods_supported | index("S256") != null)
+          ' <<<"$authorization"

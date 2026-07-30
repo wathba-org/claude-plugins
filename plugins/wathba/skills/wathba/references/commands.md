@@ -1,118 +1,134 @@
-# Wathba CLI — Full Command Reference
+# Wathba CLI command reference
 
-Binary: `wathba`. Root help: "Wathba is an agent-first CLI for installing, authenticating, configuring, and verifying Wathba capabilities."
+Use `--json` for deterministic envelopes and `--no-input` for agent runs.
+Global context flags include `--project`, `--environment`, `--api-url`,
+`--config`, `--timeout`, and `--idempotency-key`. Flag values override
+environment variables, which override non-secret config.
 
-## Global persistent flags (every command)
+## Discovery and diagnostics
 
-| Flag | Meaning |
-|---|---|
-| `--json` | Deterministic JSON envelopes (always use as an agent) |
-| `--no-input` | Never prompt or open a browser; print resume commands instead |
-| `--config <path>` | Config file override (default `$(UserConfigDir)/wathba/config.json`) |
-| `--api-url <url>` | API base (default `https://api.wathba.info`; dev `https://apidev.wathba.info`) |
-| `--token <t>` | Bearer token (rejected by `integrate` commands) |
-| `--project <id>` | Project context |
-| `--environment <env>` | Environment context |
-| `--idempotency-key <k>` | Replay-safe mutations |
-| `--install-base-url <url>` | Distribution host (default `https://install.wathba.info`) |
-| `--timeout <dur>` | Request timeout (default 30s) |
-| `--verbose` | Verbose logs (stderr) |
-| `--version` | Print version |
+- `wathba version`
+- `wathba doctor [--check <name>]`
+- `wathba manifest`
+- `wathba schema list`
+- `wathba schema get <operationId>`
+- `wathba api operations`
+- `wathba api call <operationId> --input <file>`
+- `wathba completions bash|zsh|fish|powershell`
 
-## Environment variables
+Raw calls accept only operations classified as agent-safe. Interactive-only,
+operator, provider-onboarding, and secret-bearing operations fail locally.
 
-`WATHBA_API_URL`, `WATHBA_CONFIG`, `WATHBA_OUTPUT` (text|json), `WATHBA_NO_INPUT`, `WATHBA_TOKEN`, `WATHBA_PROJECT`, `WATHBA_ENVIRONMENT`, `WATHBA_TIMEOUT`, `WATHBA_INSTALL_BASE_URL`.
+Default `doctor` checks native credential-store readiness. On failure it returns
+`KEYRING_UNAVAILABLE` with stable platform, provider, reason, remediation, and
+retry details. On a healthy store, absence of a Wathba session is not a doctor
+failure; auth commands report `NOT_AUTHENTICATED` instead. `doctor --check
+jwks` retains the dedicated API/JWKS diagnostic.
 
-Precedence: **CLI flags > env vars > config file > defaults**.
+## Authentication
 
-## Commands
+- `wathba login [--wait]`
+- `wathba auth status`
+- `wathba auth complete --no-input --json`
+- `wathba auth refresh`
+- `wathba auth logout`
+- `wathba auth sessions`
+- `wathba auth session revoke <sessionId>`
 
-### Diagnostics & self-description
-- `wathba version` — version + build metadata.
-- `wathba doctor [--check <name>]` — local diagnostics (e.g. `--check jwks`).
-- `wathba manifest` — machine-readable manifest of commands, flags, exit codes, schemas, operations (`schema_version: wathba.manifest.v1`).
-- `wathba schema list` / `wathba schema get <operationId>` — operation schemas.
-- `wathba api operations` — list raw platform operations.
-- `wathba api call <operationId> [--input <file>]` — invoke an operation by ID.
-- `wathba docs [--output-dir docs/generated]` — generate command docs.
-- `wathba completions bash|zsh|fish|powershell` — shell completions.
-- `wathba protected probe [--api-key <k>]` — probe the protected execute route.
+The backend assigns `member_workspace.v2`. Login accepts neither raw scopes nor
+a selectable profile. Tokens stay in the OS keychain. Linux requires a
+persistent D-Bus user session, Secret Service provider, and accessible unlocked
+login/default collection. Windows uses Credential Manager and macOS uses
+Keychain. `WATHBA_CREDENTIAL_PROVIDER=file` is not supported, and plaintext
+token files are prohibited.
 
-### Config
-- `wathba config get [key]` / `wathba config set <key> <value>` — non-secret local config only. Keys: `api_url`, `output`, `no_input`, `project`, `environment`, `timeout`, `install_base_url`. Tokens are NEVER stored in config.
+## Workspace and projects
 
-### Auth (OAuth device flow; tokens in OS keychain)
-- `wathba login --device [--wait]` — only `--device` is supported. Integration-context flags: `--capability <code>` (repeatable), `--integration-framework`, `--integration-destination`, `--integration-cost-class`, `--integration-run-ref`.
-- `wathba auth status` · `auth sessions` · `auth complete` · `auth refresh` · `auth logout` · `auth session revoke <sid>`.
+- `wathba workspace show`
+- `wathba project create --name <name>`
+- `wathba project list`
+- `wathba project get <projectId>`
+- `wathba project select <projectId> [--environment <environmentId>]`
+- `wathba capability catalog`
+- `wathba capability list --project <projectId> [--environment <environmentId>]`
+- `wathba capability status <capabilityCode> --project <projectId> [--environment <environmentId>]`
+- `wathba capability skill <capabilityCode>`
+- `wathba capability verify <capabilityCode>`
 
-### Projects
-- `wathba project create [--name <n>]` · `project list` · `project get <projectId>` · `project select <projectId>` (persists default project/environment).
+## Services
 
-### Services (platform-side lifecycle)
-- `wathba service list`
-- `wathba service setup <serviceCode>` — may return `SETUP_NOT_REQUIRED` (no mutation needed).
-- `wathba service status <serviceCode>`
-- `wathba service wait <serviceCode> --until ready|removed`
-- `wathba service open <serviceCode>` — dashboard handoff (channel-validated URL, never a raw provider URL).
-- `wathba service activate <serviceCode>` / `service deactivate <serviceCode>`
-- `wathba service skill <serviceCode>` — service-specific skill.
+The service surface is read-only:
 
-### Capabilities
-- `wathba capability skill <capabilityCode>` — fetch the capability's skill.
-- `wathba capability verify <capabilityCode>` — verify a capability end-to-end.
+- `wathba service list --project <projectId>`
+- `wathba service status <serviceCode> --project <projectId> --environment <environmentId>`
+- `wathba service wait <serviceCode> --until enabled --project <projectId> --environment <environmentId>`
+- `wathba service skill <serviceCode> --project <projectId>`
 
-### Skills (signed artifacts)
-- `wathba skill resolve <skillId> --version <v> --digest sha256:<hex>` — digest MUST start with `sha256:`.
-- `wathba skill install <skillId> --version <v> --digest sha256:<hex> [--target-dir <dir>]`
-- `wathba skill bootstrap install [--target-dir <dir>]` — (re)install the signed `wathba-integration` bootstrap skill.
+Authenta/Authentica and Torod are enabled once per member by a Wathba operator.
+Moyasar is enabled per project. There are no CLI setup, browser-open,
+reconcile, activation, deactivation, provider-readiness, or funding commands.
 
-### Integrate (app-side; requires keychain device session — rejects `--token`/`WATHBA_TOKEN`)
-Persistent flags: `--project-dir <dir>` (default `.`), `--credential-destination` (default `local_mock`), `--credential-destination-id`, `--acknowledge-migration-digest`.
-- `wathba integrate <capabilityCode>` — start/continue integration.
-- `wathba integrate resume <capabilityCode>` — continue after `ACTION_REQUIRED`/`PENDING`/`BLOCKED`.
-- `wathba integrate status <capabilityCode>` · `verify` · `repair` · `upgrade` · `rollback` · `remove <capabilityCode>`.
+## Hosted MCP and repository detection
 
-### Keys
-- `wathba key create [--environment <e>] [--env test]`
+- `wathba mcp [--api-url <url>]`
+- `wathba integrate inspect --project-dir <dir>`
+- `wathba integrate <capabilityCode> --project-dir <dir>`
+- `wathba integrate cleanup --project-dir <dir>`
+
+`mcp` prints deterministic remote-MCP/OAuth setup for Replit, Claude Code,
+Codex, Inspector, and generic hosts. It does not authorize a host itself.
+
+The `integrate` command family is local and read-only. It makes no Wathba API
+request, uploads no repository content, and writes no file. The capability form
+returns `MCP_REQUIRED`. `cleanup` lists legacy `.wathba` integration artifacts
+without deleting them.
+
+## Skills
+
+- `wathba skill resolve <skillId> --version <version> --digest sha256:<hex>`
+- `wathba skill install <skillId> --version <version> --digest sha256:<hex> [--target-dir <dir>]`
+- `wathba skill bootstrap install [--target-dir <dir>]`
+- `wathba agent install [--target-dir <dir>]`
+
+Artifact signatures, digests, publisher identities, and revocation state are
+mandatory. Never bypass trust checks.
+
+## API-key metadata
+
 - `wathba key list`
-- `wathba key revoke|suspend|reactivate|compromise <keyId>`
-- `wathba key rotate <keyId> [--overlap-seconds 300]`
-- `wathba key activation complete <keyId>` · `key activation reissue-secret <keyId>`
 
-### Updates
-- `wathba update check [--channel stable|beta] [--version <v>]`
-- `wathba self-update [--channel stable|beta] [--version <v>] [--verify-only] [--rollback]` — `--verify-only`/`--rollback` and `--version`/`--rollback` are mutually exclusive.
+The key secret is created/revealed once to the authorized human in the portal
+The workspace profile includes `keys:read` and intentionally excludes
+`keys:manage`. Key creation, rotation, revocation, suspension, reactivation, and
+compromise handling are protected portal actions. A workspace agent must not
+invoke them.
 
-### Feedback (human-only)
-- `wathba feedback --title <t> --description <d>` — requires a real TTY; rejects `--no-input` and `--idempotency-key`; there is no agent bypass. Ask the user to run it themselves.
+## Webhooks
 
-## Output contract
+- `wathba webhook register <url> --project <projectId> --environment <environmentId>`
+- `wathba webhook list --project <projectId>`
+- `wathba webhook verify <endpointId> <challenge>`
+- `wathba webhook disable <endpointId>`
+- `wathba webhook deliveries --project <projectId> [--endpoint <endpointId>] [--state <state>] [--limit <n>]`
 
-- Success: `{"schema_version":"wathba.output.v1","ok":true,"data":{...}}` on stdout.
-- Failure: `{"schema_version":"wathba.error.v1","ok":false,"error":{"code","message","hint","details"}}`.
-- Logs/errors → stderr. Secrets are redacted everywhere.
+Register, verify, and disable are state-changing and require
+`--idempotency-key`. The endpoint signing secret is portal-only and always
+redacted; endpoint listings expose a URL hash, never the raw URL. See
+`references/webhooks.md`.
+
+## Updates
+
+- `wathba update check`
+- `wathba self-update [--channel stable|beta] [--verify-only] [--rollback]`
 
 ## Exit codes
 
-| Code | Meaning | Agent action |
-|---|---|---|
-| 0 | Success — but inspect `data.outcome` | Continue per outcome |
-| 1 | General error | Read `error.hint` |
-| 2 | Invalid input / missing context | Fix flags/args; set project/environment |
-| 3 | Not authenticated | `wathba login --device --wait` |
-| 4 | Permission denied | Report to user; may need dashboard role |
-| 5 | Not found | Check code/ID via `service list` / `api operations` |
-| 6 | Network / decode | Retry with backoff; check `--api-url` |
-| 7 | Timeout | Increase `--timeout`; use `service wait` |
-| 8 | Conflict / replay / activation race | Journal advanced elsewhere — run `status`, resume from reality |
-| 9 | Verification failed | Run `repair` or report |
-| 10 | Update failed | `self-update --rollback` if needed |
-| 11 | Protocol incompatible | `self-update`, then retry |
-
-## Installer contract (install.sh / install.ps1 / install.cmd)
-
-- `WATHBA_INSTALL_OUTPUT=human|json` (default human). JSON = NDJSON events, `schema_version: wathba.installer.event.v1`, fields: `phase`, `status`, `artifact`, `bytes_downloaded`, `outcome`, `version`, `error`. Terminal `outcome`: `installed | updated | already_installed | failed` (+ `error.code`).
-- Network policy env vars (positive integers): `WATHBA_INSTALL_CONNECT_TIMEOUT_SECONDS` (15), `WATHBA_INSTALL_MAX_TIME_SECONDS` (600), `WATHBA_INSTALL_LOW_SPEED_TIME_SECONDS` (30), `WATHBA_INSTALL_LOW_SPEED_LIMIT_BYTES` (1024), `WATHBA_INSTALL_RETRIES` (3), `WATHBA_INSTALL_RETRY_DELAY_SECONDS` (2).
-- Retries never weaken trust: signatures (pinned Cosign 3.0.6, SHA-256-verified) are checked before anything is used.
-- Install dirs: binary → `WATHBA_INSTALL_DIR` (default `$HOME/.wathba/bin`); bootstrap skill → `WATHBA_CODEX_SKILLS_DIR` (default `$HOME/.agents/skills`).
-- Supported: macOS/Linux x86_64+arm64; Windows via zip. Requires `curl` and `openssl`.
+| Code | Meaning |
+|---:|---|
+| 0 | Command completed; inspect the typed outcome |
+| 2 | Invalid input or missing context |
+| 3 | Authentication/authorization required |
+| 4 | Remote or transport failure |
+| 5 | Verification/protocol incompatibility |
+| 6 | Local install/filesystem failure |
+| 8 | Conflict or replay mismatch; re-read status |
