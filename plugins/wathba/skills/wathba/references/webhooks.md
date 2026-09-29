@@ -48,6 +48,8 @@ Each delivery is an HTTPS POST with headers:
 - `x-wathba-signature-version` — the exact signing-secret version; no fallback.
 - `x-wathba-timestamp` — unix seconds as a string.
 - `x-wathba-event-id`, `x-wathba-delivery-id` — correlation IDs.
+- `x-wathba-webhook-version` — the endpoint's independently pinned webhook
+  contract version.
 
 Compute HMAC-SHA256 over `timestamp + "." + rawBody` (the exact raw request
 bytes, before any JSON parsing) with the raw `whsec_...` string as the key.
@@ -56,6 +58,12 @@ deliveries whose timestamp is outside a 300-second tolerance. Prefer the
 official Wathba TypeScript SDK's `verifyWebhookSignature` helper once
 released instead of hand-rolling this. Reject on any mismatch; never log the
 secret or the raw signature inputs.
+
+Validate `x-wathba-webhook-version` before parsing the body. The webhook pin is
+independent from every service API pin. Updating a service contract never
+changes webhook payloads, and updating a webhook endpoint never changes member
+runtime responses. Existing queued deliveries and replays keep the exact
+version and serialized body recorded when the delivery was created.
 
 ## 4. Deduplicate and process
 
@@ -86,3 +94,16 @@ Returns delivery status metadata only (state, attempts, response class) —
 never event payloads or signing material. Use it to diagnose dead-lettered or
 retrying deliveries; replay and subscription management stay in the trusted
 member portal.
+
+Inspect the endpoint's current `webhookContractVersion`, its assignable
+targets (each with `changeKind`), and production-ready sandbox evidence with:
+
+```sh
+wathba webhook contract-inspect <endpointId> --json --no-input
+```
+
+Webhook contract upgrade and rollback are portal-only: they require a fresh
+browser session with `webhooks:manage`, which a CLI session never holds. When
+the member chooses a supported target, direct them to the trusted portal.
+Never upgrade webhook contracts as a side effect of a CLI, SDK, catalog,
+provider, or platform release.

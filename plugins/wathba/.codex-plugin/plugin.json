@@ -1,0 +1,40 @@
+{
+  "author": {
+    "name": "Wathba"
+  },
+  "description": "Connect your coding agent to Wathba for read-only project discovery, pinned integration guides, supported operations, troubleshooting, and notices that need the member's attention across every authorized project. OAuth credentials stay in the MCP host and outside model context.",
+  "homepage": "https://platform.wathba.info/docs/mcp",
+  "interface": {
+    "brandColor": "#FF5B05",
+    "capabilities": [
+      "Read"
+    ],
+    "category": "Developer Tools",
+    "composerIcon": "./assets/favicon.png",
+    "defaultPrompt": [
+      "List my Wathba projects, tell me about notices across all of them, and help me choose one.",
+      "Read the pinned integration guide for my selected service.",
+      "Troubleshoot my Wathba integration without exposing credentials."
+    ],
+    "developerName": "Wathba",
+    "displayName": "Wathba",
+    "logo": "./assets/favicon.png",
+    "logoDark": "./assets/favicon.png",
+    "longDescription": "Connect your coding agent to Wathba for read-only project discovery, pinned integration guides, supported operations, troubleshooting, and notices that need the member's attention across every authorized project. OAuth credentials stay in the MCP host and outside model context.",
+    "screenshots": [],
+    "shortDescription": "Build with Wathba integrations",
+    "websiteURL": "https://platform.wathba.info/docs/mcp"
+  },
+  "keywords": [
+    "wathba",
+    "integrations",
+    "mcp",
+    "otp",
+    "payments",
+    "shipping"
+  ],
+  "mcpServers": "./.mcp.json",
+  "name": "wathba",
+  "skills": "./skills/",
+  "version": "1.1.0"
+}

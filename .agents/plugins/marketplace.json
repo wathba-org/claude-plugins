@@ -1,0 +1,20 @@
+{
+  "interface": {
+    "displayName": "Wathba"
+  },
+  "name": "wathba",
+  "plugins": [
+    {
+      "category": "Developer Tools",
+      "name": "wathba",
+      "policy": {
+        "authentication": "ON_INSTALL",
+        "installation": "AVAILABLE"
+      },
+      "source": {
+        "path": "./plugins/wathba",
+        "source": "local"
+      }
+    }
+  ]
+}
