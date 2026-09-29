@@ -1,13 +1,21 @@
 {
-  "name": "wathba",
-  "version": "1.0.0",
-  "description": "Install and operate the Wathba CLI — authenticate, activate services (OTP, payments, shipping), integrate capabilities, manage API keys. Understands Arabic and English prompts and replies in the user's language.",
   "author": {
     "name": "Wathba",
     "url": "https://wathba.info"
   },
-  "homepage": "https://github.com/wathba-org/wathba-skill",
-  "repository": "https://github.com/wathba-org/claude-plugins",
+  "description": "Connect your coding agent to Wathba for read-only project discovery, pinned integration guides, supported operations, troubleshooting, and notices that need the member's attention across every authorized project. OAuth credentials stay in the MCP host and outside model context.",
+  "homepage": "https://platform.wathba.info/docs/mcp",
+  "keywords": [
+    "wathba",
+    "وثبة",
+    "mcp",
+    "integrations",
+    "otp",
+    "payments",
+    "shipping"
+  ],
   "license": "Apache-2.0",
-  "keywords": ["wathba", "وثبة", "cli", "arabic", "payments", "otp", "shipping"]
+  "name": "wathba",
+  "repository": "https://github.com/wathba-org/claude-plugins",
+  "version": "1.1.0"
 }

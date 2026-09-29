@@ -1,24 +1,32 @@
 {
+  "metadata": {
+    "description": "Official Wathba plugin marketplace",
+    "version": "1.1.0"
+  },
   "name": "wathba",
   "owner": {
     "name": "Wathba",
     "url": "https://wathba.info"
   },
-  "metadata": {
-    "description": "Official Wathba (وثبة) plugins for Claude Code",
-    "version": "1.0.0"
-  },
   "plugins": [
     {
-      "name": "wathba",
-      "source": "./plugins/wathba",
-      "description": "Install and operate the Wathba CLI — authenticate, activate services (OTP, payments, shipping), integrate capabilities, manage API keys. Understands Arabic and English prompts and replies in the user's language.",
       "author": {
         "name": "Wathba",
         "url": "https://wathba.info"
       },
-      "keywords": ["wathba", "وثبة", "cli", "arabic", "payments", "otp", "shipping"],
-      "category": "developer-tools"
+      "category": "developer-tools",
+      "description": "Connect your coding agent to Wathba for read-only project discovery, pinned integration guides, supported operations, troubleshooting, and notices that need the member's attention across every authorized project. OAuth credentials stay in the MCP host and outside model context.",
+      "keywords": [
+        "wathba",
+        "وثبة",
+        "mcp",
+        "integrations",
+        "otp",
+        "payments",
+        "shipping"
+      ],
+      "name": "wathba",
+      "source": "./plugins/wathba"
     }
   ]
 }

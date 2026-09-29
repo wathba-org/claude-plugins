@@ -1,0 +1,15 @@
+{
+  "apiOrigin": "https://api.wathba.info",
+  "credentialMode": "oauth_pkce",
+  "marketplaceId": "wathba",
+  "mcpEndpoint": "https://api.wathba.info/mcp",
+  "pluginId": "wathba",
+  "portalOrigin": "https://platform.wathba.info",
+  "requiredScopes": [
+    "mcp:read"
+  ],
+  "schemaVersion": "wathba.agent-plugin-release.v1",
+  "target": "prod",
+  "sourceRepository": "wathba-org/wathba-cli",
+  "sourceCommit": "c2891a04f6884952101e2d1fac460a20562f7db7"
+}
