@@ -28,6 +28,8 @@ jobs:
       - name: Validate marketplace isolation
         run: node scripts/validate-marketplace.mjs
 
+      # The plugin requests only mcp:read (plugins/wathba/release.json); the
+      # server may advertise more scopes, as wathba-cli's validator allows.
       - name: Validate production OAuth metadata when MCP is published
         shell: bash
         run: |
@@ -48,7 +50,7 @@ jobs:
           jq -e '
             .resource == "https://api.wathba.info/mcp" and
             .authorization_servers == ["https://api.wathba.info"] and
-            .scopes_supported == ["mcp:read"] and
+            (.scopes_supported | index("mcp:read") != null) and
             .resource_documentation == "https://platform.wathba.info/docs/mcp"
           ' <<<"$resource"
           jq -e '
@@ -56,6 +58,6 @@ jobs:
             .authorization_endpoint == "https://platform.wathba.info/oauth/authorize" and
             .token_endpoint == "https://api.wathba.info/v1/oauth/token" and
             .registration_endpoint == "https://api.wathba.info/v1/oauth/register" and
-            .scopes_supported == ["mcp:read"] and
+            (.scopes_supported | index("mcp:read") != null) and
             (.code_challenge_methods_supported | index("S256") != null)
           ' <<<"$authorization"
