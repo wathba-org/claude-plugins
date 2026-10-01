@@ -1,0 +1,48 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "wathba-dev",
+  "version": "2.0.0-dev.1",
+  "description": "Connect your coding agent to the Wathba development environment over MCP: projects, notices, pinned integration guides, sandbox project creation and member-confirmed API upgrades for Saudi payments, OTP/SMS, KYC, ZATCA e-invoicing and shipping.",
+  "author": {
+    "name": "Wathba",
+    "url": "https://wathba.sa"
+  },
+  "homepage": "https://platformdev.wathba.info/docs/mcp",
+  "repository": "https://github.com/wathba-org/wathba-plugin",
+  "license": "Apache-2.0",
+  "keywords": [
+    "wathba",
+    "وثبة",
+    "mcp",
+    "payments",
+    "otp",
+    "kyc",
+    "zatca",
+    "shipping"
+  ],
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "Wathba Dev",
+        "shortDescription": "Saudi payments, OTP, KYC, ZATCA and shipping for your app",
+        "longDescription": "Connect your coding agent to the Wathba development environment over MCP: projects, notices, pinned integration guides, sandbox project creation and member-confirmed API upgrades for Saudi payments, OTP/SMS, KYC, ZATCA e-invoicing and shipping.",
+        "developerName": "Wathba",
+        "category": "Developer Tools",
+        "capabilities": [
+          "Read",
+          "Write"
+        ],
+        "websiteURL": "https://platformdev.wathba.info/docs/mcp",
+        "brandColor": "#FF5B05",
+        "composerIcon": "./assets/favicon.png",
+        "logo": "./assets/favicon.png",
+        "logoDark": "./assets/favicon.png",
+        "defaultPrompt": [
+          "List my Wathba projects and any notices that need my attention.",
+          "Which Wathba services fit this repository?",
+          "Add Wathba OTP to this app."
+        ]
+      }
+    }
+  }
+}

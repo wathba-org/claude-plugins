@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "wathba-dev": {
+      "type": "http",
+      "url": "https://apidev.wathba.info/mcp"
+    }
+  }
+}

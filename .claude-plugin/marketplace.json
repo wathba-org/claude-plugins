@@ -1,0 +1,28 @@
+{
+  "name": "wathba-development",
+  "owner": {
+    "name": "Wathba",
+    "url": "https://wathba.sa"
+  },
+  "metadata": {
+    "description": "Official Wathba Development plugin marketplace"
+  },
+  "plugins": [
+    {
+      "name": "wathba-dev",
+      "source": "./plugins/wathba-dev",
+      "description": "Connect your coding agent to the Wathba development environment over MCP: projects, notices, pinned integration guides, sandbox project creation and member-confirmed API upgrades for Saudi payments, OTP/SMS, KYC, ZATCA e-invoicing and shipping.",
+      "category": "developer-tools",
+      "keywords": [
+        "wathba",
+        "وثبة",
+        "mcp",
+        "payments",
+        "otp",
+        "kyc",
+        "zatca",
+        "shipping"
+      ]
+    }
+  ]
+}

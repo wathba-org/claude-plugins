@@ -1,0 +1,11 @@
+{
+  "schemaVersion": "wathba.agent-plugin-release.v2",
+  "target": "dev",
+  "marketplace": "wathba-development",
+  "plugin": "wathba-dev",
+  "version": "2.0.0-dev.1",
+  "mcpEndpoint": "https://apidev.wathba.info/mcp",
+  "portalOrigin": "https://platformdev.wathba.info",
+  "credentialMode": "oauth_pkce",
+  "contentDigest": "sha256:6ac4629ded86b737f1227eaba53a828a544a7fa83430b78cbcded5e54fdf56cd"
+}
