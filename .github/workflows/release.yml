@@ -74,8 +74,14 @@ jobs:
           out="$RUNNER_TEMP/release"
           assets=("$out/wathba-plugin-${VERSION}.zip" "$out/server.json" "$out/SHA256SUMS")
           if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-            # A re-run after a failed registry publish: refresh the assets.
-            gh release upload "$TAG" "${assets[@]}" --repo "$GITHUB_REPOSITORY" --clobber
+            # A re-run after a failed registry publish: keep the published
+            # assets (never clobber them) and upload only the missing ones.
+            published="$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name')"
+            for asset in "${assets[@]}"; do
+              if ! grep -qxF "$(basename "$asset")" <<<"$published"; then
+                gh release upload "$TAG" "$asset" --repo "$GITHUB_REPOSITORY"
+              fi
+            done
             exit 0
           fi
           gh release create "$TAG" "${assets[@]}" \
