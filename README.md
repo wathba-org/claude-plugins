@@ -65,6 +65,7 @@ icon hash.
 | `validate` | Every PR, push to `main`, weekly | Generator rules, version rule, then installs both builds into throwaway Claude Code and Codex homes, then checks the live OAuth metadata |
 | `publish-dev` | Push to `main` | Builds the development marketplace, verifies it, and publishes it to the `dev` branch |
 | `drift` | Daily | Checks both environments' live OAuth metadata and opens an issue when it stops matching |
+| `release` | `v*` tag on `main` | GitHub release with the plugin ZIP, then the MCP Registry entry |
 
 The packages carry no scopes. The Wathba server decides the grant: every
 connection gets full agent access, and the consent page shows exactly what
@@ -82,6 +83,17 @@ that allows.
 
 `contract.json` lists the Wathba tools the skill names. The platform's CI reads
 it and fails a backend change that would remove or rename one of them.
+
+## Release production
+
+1. Merge the change (with its higher `version`) to `main`. Plugin installs pick
+   it up from `main`.
+2. Tag the merge commit `v<version>` and push the tag. `release.yml` checks that
+   the tag, config and package agree, attaches the plugin ZIP, `server.json` and
+   checksums to a GitHub release, then publishes `server.json` to the official
+   MCP Registry after the owner approves the `registry` environment.
+
+`listing/` holds the material for the Anthropic and OpenAI directories.
 
 ## Acceptance
 

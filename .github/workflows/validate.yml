@@ -49,11 +49,6 @@ jobs:
           BASE_REF: ${{ github.base_ref }}
         run: node scripts/sync.mjs version-rule --base "origin/${BASE_REF}"
 
-      - name: Validate the CLI-published production package
-        # Removed once the generator owns the production root (config.rootTarget).
-        if: hashFiles('scripts/validate-marketplace.mjs') != ''
-        run: node scripts/validate-marketplace.mjs
-
       - name: Build both marketplaces
         run: |
           node scripts/sync.mjs build --target dev --out "$RUNNER_TEMP/dev"
@@ -64,6 +59,11 @@ jobs:
 
       - name: Install into Claude Code and Codex (production build)
         run: scripts/smoke-hosts.sh "$RUNNER_TEMP/prod" prod
+
+      - name: MCP Registry entry is valid
+        run: |
+          scripts/install-mcp-publisher.sh "$RUNNER_TEMP/bin"
+          "$RUNNER_TEMP/bin/mcp-publisher" validate
 
       - name: Live OAuth metadata (DEV and production)
         run: |

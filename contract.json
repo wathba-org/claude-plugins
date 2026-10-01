@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "wathba.agent-plugin-contract.v1",
+  "target": "prod",
+  "marketplace": "wathba",
+  "plugin": "wathba",
+  "serverKey": "wathba",
+  "mcpEndpoint": "https://api.wathba.info/mcp",
+  "tools": [
+    "apply_api_upgrade",
+    "create_project",
+    "get_service_integration_docs",
+    "get_service_operations",
+    "get_service_troubleshooting",
+    "inspect_api_upgrade",
+    "list_notices",
+    "list_project_services",
+    "list_projects",
+    "prepare_api_upgrade",
+    "preview_api_upgrade",
+    "recommend_services_for_repository",
+    "rollback_api_upgrade"
+  ]
+}

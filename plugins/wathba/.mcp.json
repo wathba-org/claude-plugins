@@ -1,9 +1,6 @@
 {
   "mcpServers": {
     "wathba": {
-      "scopes": [
-        "mcp:read"
-      ],
       "type": "http",
       "url": "https://api.wathba.info/mcp"
     }

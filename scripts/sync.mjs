@@ -580,14 +580,10 @@ async function versionRule(config, base) {
     console.log("version-rule: published output unchanged");
     return;
   }
-  let baseVersion;
-  try {
-    baseVersion = JSON.parse(git("show", `${base}:plugin.config.json`)).version;
-  } catch {
-    baseVersion = JSON.parse(
-      git("show", `${base}:plugins/${target.plugin}/.claude-plugin/plugin.json`),
-    ).version;
-  }
+  // Compare with what the base actually publishes, not its config.
+  const baseVersion = JSON.parse(
+    git("show", `${base}:plugins/${target.plugin}/.claude-plugin/plugin.json`),
+  ).version;
   if (compareSemver(config.version, baseVersion) <= 0)
     fail(
       "version",

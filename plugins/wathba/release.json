@@ -1,15 +1,11 @@
 {
-  "apiOrigin": "https://api.wathba.info",
-  "credentialMode": "oauth_pkce",
-  "marketplaceId": "wathba",
-  "mcpEndpoint": "https://api.wathba.info/mcp",
-  "pluginId": "wathba",
-  "portalOrigin": "https://platform.wathba.info",
-  "requiredScopes": [
-    "mcp:read"
-  ],
-  "schemaVersion": "wathba.agent-plugin-release.v1",
+  "schemaVersion": "wathba.agent-plugin-release.v2",
   "target": "prod",
-  "sourceRepository": "wathba-org/wathba-cli",
-  "sourceCommit": "c2891a04f6884952101e2d1fac460a20562f7db7"
+  "marketplace": "wathba",
+  "plugin": "wathba",
+  "version": "2.0.0",
+  "mcpEndpoint": "https://api.wathba.info/mcp",
+  "portalOrigin": "https://platform.wathba.info",
+  "credentialMode": "oauth_pkce",
+  "contentDigest": "sha256:a33e413623aaad76772c102b88612bee5880e87eb91b46f15dcc765d17367272"
 }
