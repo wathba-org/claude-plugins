@@ -1,0 +1,86 @@
+{
+  "version": "2.0.0",
+  "description": "Connect your coding agent to Wathba over MCP: projects, notices, pinned integration guides, sandbox project creation and member-confirmed API upgrades for Saudi payments, OTP/SMS, KYC, ZATCA e-invoicing and shipping.",
+  "shortDescription": "Saudi payments, OTP, KYC, ZATCA and shipping for your app",
+  "registryDescription": "Saudi payments, OTP/SMS, KYC, ZATCA e-invoicing and shipping for AI coding agents.",
+  "publisher": {
+    "name": "Wathba",
+    "url": "https://wathba.sa"
+  },
+  "repository": "https://github.com/wathba-org/wathba-plugin",
+  "license": "Apache-2.0",
+  "keywords": [
+    "wathba",
+    "وثبة",
+    "mcp",
+    "payments",
+    "otp",
+    "kyc",
+    "zatca",
+    "shipping"
+  ],
+  "branding": {
+    "brandColor": "#FF5B05",
+    "icon": "src/assets/favicon.png",
+    "iconSha256": "121395de9f3434eac1182f8e907ba1717fc6796696b87e66d207e883c0444e80"
+  },
+  "skill": {
+    "source": "src/skills/wathba/SKILL.md",
+    "tools": [
+      "apply_api_upgrade",
+      "create_project",
+      "get_service_integration_docs",
+      "get_service_operations",
+      "get_service_troubleshooting",
+      "inspect_api_upgrade",
+      "list_notices",
+      "list_project_services",
+      "list_projects",
+      "prepare_api_upgrade",
+      "preview_api_upgrade",
+      "recommend_services_for_repository",
+      "rollback_api_upgrade"
+    ],
+    "nonToolTerms": []
+  },
+  "claude": {
+    "category": "developer-tools"
+  },
+  "codex": {
+    "category": "Developer Tools",
+    "installation": "AVAILABLE",
+    "authentication": "ON_INSTALL",
+    "capabilities": ["Read", "Write"],
+    "defaultPrompt": [
+      "List my Wathba projects and any notices that need my attention.",
+      "Which Wathba services fit this repository?",
+      "Add Wathba OTP to this app."
+    ]
+  },
+  "registry": {
+    "name": "io.github.wathba-org/wathba",
+    "title": "Wathba"
+  },
+  "targets": {
+    "prod": {
+      "branch": "main",
+      "marketplace": "wathba",
+      "marketplaceDisplayName": "Wathba",
+      "plugin": "wathba",
+      "displayName": "Wathba",
+      "serverKey": "wathba",
+      "apiOrigin": "https://api.wathba.info",
+      "portalOrigin": "https://platform.wathba.info"
+    },
+    "dev": {
+      "branch": "dev",
+      "marketplace": "wathba-development",
+      "marketplaceDisplayName": "Wathba Development",
+      "plugin": "wathba-dev",
+      "displayName": "Wathba Dev",
+      "serverKey": "wathba-dev",
+      "apiOrigin": "https://apidev.wathba.info",
+      "portalOrigin": "https://platformdev.wathba.info"
+    }
+  }
+}

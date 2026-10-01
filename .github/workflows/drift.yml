@@ -1,0 +1,64 @@
+name: MCP drift
+
+# Daily check that the live OAuth metadata and health of each environment
+# still match what the plugin points at. Opens one issue per environment on
+# failure and closes it when the check passes again.
+
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  drift:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      issues: write
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [dev, prod]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Check live metadata
+        id: check
+        continue-on-error: true
+        run: scripts/check-oauth.sh "${{ matrix.target }}" 2>&1 | tee "$RUNNER_TEMP/drift.log"
+
+      - name: Open, update or close the drift issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TARGET: ${{ matrix.target }}
+          OUTCOME: ${{ steps.check.outcome }}
+        run: |
+          set -euo pipefail
+          title="MCP drift: ${TARGET}"
+          existing="$(gh issue list --state open --search "\"${title}\" in:title" --json number --jq '.[0].number // empty')"
+          if [[ "$OUTCOME" == "success" ]]; then
+            if [[ -n "$existing" ]]; then
+              gh issue close "$existing" --comment "Resolved: the ${TARGET} metadata matches again (run ${GITHUB_RUN_ID})."
+            fi
+            exit 0
+          fi
+          fence=$'\x60\x60\x60'
+          body="The live MCP metadata for **${TARGET}** no longer matches the plugin.
+
+          Run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}
+
+          ${fence}
+          $(tail -c 3000 "$RUNNER_TEMP/drift.log")
+          ${fence}"
+          if [[ -n "$existing" ]]; then
+            gh issue comment "$existing" --body "$body"
+          else
+            gh issue create --title "$title" --body "$body"
+          fi
+          exit 1
