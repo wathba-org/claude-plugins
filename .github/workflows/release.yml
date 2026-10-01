@@ -72,8 +72,13 @@ jobs:
         run: |
           set -euo pipefail
           out="$RUNNER_TEMP/release"
-          gh release create "$TAG" \
-            "$out/wathba-plugin-${VERSION}.zip" "$out/server.json" "$out/SHA256SUMS" \
+          assets=("$out/wathba-plugin-${VERSION}.zip" "$out/server.json" "$out/SHA256SUMS")
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            # A re-run after a failed registry publish: refresh the assets.
+            gh release upload "$TAG" "${assets[@]}" --repo "$GITHUB_REPOSITORY" --clobber
+            exit 0
+          fi
+          gh release create "$TAG" "${assets[@]}" \
             --repo "$GITHUB_REPOSITORY" --verify-tag \
             --title "Wathba plugin ${VERSION}" \
             --notes "Production Wathba plugin ${VERSION} (wathba@wathba). Install with \`/plugin marketplace add wathba-org/wathba-plugin\` in Claude Code or \`codex plugin marketplace add wathba-org/wathba-plugin\` in Codex."

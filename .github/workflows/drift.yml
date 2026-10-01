@@ -31,7 +31,11 @@ jobs:
       - name: Check live metadata
         id: check
         continue-on-error: true
-        run: scripts/check-oauth.sh "${{ matrix.target }}" 2>&1 | tee "$RUNNER_TEMP/drift.log"
+        # bash runs with -eo pipefail, so a failed check is not hidden by tee.
+        shell: bash
+        env:
+          TARGET: ${{ matrix.target }}
+        run: scripts/check-oauth.sh "$TARGET" 2>&1 | tee "$RUNNER_TEMP/drift.log"
 
       - name: Open, update or close the drift issue
         env:

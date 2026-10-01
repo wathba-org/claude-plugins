@@ -18,9 +18,12 @@ in this repository.
    (`privacyPolicyURL` and `termsOfServiceURL` in the Codex interface) and to
    each form.
 2. A support contact address for the publisher.
-3. A dedicated reviewer member account with a sandbox project, shared only
+3. A square brand icon of at least 48×48 (512×512 recommended): OpenAI rejects
+   smaller icons and logos, and the current icon is the 32×32 favicon. Replace
+   `src/assets/favicon.png` and `branding.iconSha256` together.
+4. A dedicated reviewer member account with a sandbox project, shared only
    through each directory's form.
-4. Recorded acceptance runs for the hosts being listed (`docs/acceptance/`).
+5. Recorded acceptance runs for the hosts being listed (`docs/acceptance/`).
 
 ## Listing text
 
