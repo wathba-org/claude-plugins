@@ -82,6 +82,12 @@ async function loadConfig() {
       fail("config", `default prompt over 128 characters: ${prompt}`);
   if (config.registryDescription.length > 100)
     fail("config", "registryDescription must be at most 100 characters");
+  if (config.shortDescription.length > 30)
+    fail("config", "shortDescription must be at most 30 characters (OpenAI listing subtitle)");
+  // The production package is committed at the root; check and version-rule
+  // must always compare against it, so the field cannot be dropped.
+  if (config.rootTarget !== "prod")
+    fail("config", 'rootTarget must be "prod"');
   return config;
 }
 
