@@ -1,0 +1,104 @@
+name: Release production plugin
+
+# A v<version> tag on main releases the production plugin: it checks that the
+# tag, the config and the committed package agree, attaches the plugin ZIP
+# (for directory submissions), server.json and checksums to a GitHub release,
+# then publishes server.json to the official MCP Registry after approval.
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "24"
+
+      - name: The tag, config and package agree
+        id: version
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          version="$(jq -r '.version' plugin.config.json)"
+          [[ "$TAG" == "v${version}" ]] || { echo "tag $TAG does not match v${version}" >&2; exit 1; }
+          [[ "$(jq -r '.version' plugins/wathba/plugin.json)" == "$version" ]]
+          [[ "$(jq -r '.version' server.json)" == "$version" ]]
+          git merge-base --is-ancestor "$GITHUB_SHA" origin/main || { echo "the tag is not on main" >&2; exit 1; }
+          echo "version=$version" >>"$GITHUB_OUTPUT"
+
+      - name: The committed package equals a fresh build
+        run: node scripts/sync.mjs check
+
+      - name: Package
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          out="$RUNNER_TEMP/release"
+          mkdir -p "$out"
+          (cd plugins && zip -X -q -r "$out/wathba-plugin-${VERSION}.zip" wathba)
+          cp server.json "$out/server.json"
+          (cd "$out" && sha256sum "wathba-plugin-${VERSION}.zip" server.json >SHA256SUMS)
+          cat "$out/SHA256SUMS"
+
+      - name: Create the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          out="$RUNNER_TEMP/release"
+          gh release create "$TAG" \
+            "$out/wathba-plugin-${VERSION}.zip" "$out/server.json" "$out/SHA256SUMS" \
+            --repo "$GITHUB_REPOSITORY" --verify-tag \
+            --title "Wathba plugin ${VERSION}" \
+            --notes "Production Wathba plugin ${VERSION} (wathba@wathba). Install with \`/plugin marketplace add wathba-org/wathba-plugin\` in Claude Code or \`codex plugin marketplace add wathba-org/wathba-plugin\` in Codex."
+
+  registry:
+    needs: release
+    runs-on: ubuntu-24.04
+    # Requires the owner's approval; the OIDC token can publish any server
+    # under io.github.wathba-org/*.
+    environment: registry
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Install the MCP Registry publisher
+        run: scripts/install-mcp-publisher.sh "$RUNNER_TEMP/bin"
+
+      - name: Publish server.json
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/bin/mcp-publisher" validate
+          "$RUNNER_TEMP/bin/mcp-publisher" login github-oidc
+          "$RUNNER_TEMP/bin/mcp-publisher" publish
