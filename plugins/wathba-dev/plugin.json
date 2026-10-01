@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "wathba-dev",
-  "version": "2.0.0-dev.1",
+  "version": "2.0.1-dev.3",
   "description": "Connect your coding agent to the Wathba development environment over MCP: projects, notices, pinned integration guides, sandbox project creation and member-confirmed API upgrades for Saudi payments, OTP/SMS, KYC, ZATCA e-invoicing and shipping.",
   "author": {
     "name": "Wathba",
@@ -24,7 +24,7 @@
     "com.openai": {
       "interface": {
         "displayName": "Wathba Dev",
-        "shortDescription": "Saudi payments, OTP, KYC, ZATCA and shipping for your app",
+        "shortDescription": "Saudi payments, OTP and KYC",
         "longDescription": "Connect your coding agent to the Wathba development environment over MCP: projects, notices, pinned integration guides, sandbox project creation and member-confirmed API upgrades for Saudi payments, OTP/SMS, KYC, ZATCA e-invoicing and shipping.",
         "developerName": "Wathba",
         "category": "Developer Tools",
