@@ -5,6 +5,10 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
+  schedule:
+    # Weekly run on the pinned CLIs catches host-side format changes early.
+    - cron: "17 5 * * 1"
 
 permissions:
   contents: read
@@ -13,51 +17,55 @@ concurrency:
   group: plugin-marketplace-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  CLAUDE_CODE_VERSION: "2.1.287"
+  CODEX_VERSION: "0.159.2"
+
 jobs:
+  # The ruleset on main requires this job name. Do not rename it.
   validate:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
 
       - name: Set up Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: "24"
 
-      - name: Validate marketplace isolation
+      - name: Install the host CLIs used as validators
+        run: npm install --global --no-fund --no-audit "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}" "@openai/codex@${CODEX_VERSION}"
+
+      - name: Generator rules (both targets, committed root output)
+        run: node scripts/sync.mjs check
+
+      - name: Version must grow when the published plugin changes
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: node scripts/sync.mjs version-rule --base "origin/${BASE_REF}"
+
+      - name: Validate the CLI-published production package
+        # Removed once the generator owns the production root (config.rootTarget).
+        if: hashFiles('scripts/validate-marketplace.mjs') != ''
         run: node scripts/validate-marketplace.mjs
 
-      # The plugin requests only mcp:read (plugins/wathba/release.json); the
-      # server may advertise more scopes, as wathba-cli's validator allows.
-      - name: Validate production OAuth metadata when MCP is published
-        shell: bash
+      - name: Build both marketplaces
         run: |
-          set -euo pipefail
-          if [[ ! -f plugins/wathba/.mcp.json ]]; then
-            echo "Production MCP package is not published yet."
-            exit 0
-          fi
+          node scripts/sync.mjs build --target dev --out "$RUNNER_TEMP/dev"
+          node scripts/sync.mjs build --target prod --out "$RUNNER_TEMP/prod"
 
-          resource="$(
-            curl --fail --silent --show-error \
-              https://api.wathba.info/.well-known/oauth-protected-resource/mcp
-          )"
-          authorization="$(
-            curl --fail --silent --show-error \
-              https://api.wathba.info/.well-known/oauth-authorization-server
-          )"
-          jq -e '
-            .resource == "https://api.wathba.info/mcp" and
-            .authorization_servers == ["https://api.wathba.info"] and
-            (.scopes_supported | index("mcp:read") != null) and
-            .resource_documentation == "https://platform.wathba.info/docs/mcp"
-          ' <<<"$resource"
-          jq -e '
-            .issuer == "https://api.wathba.info" and
-            .authorization_endpoint == "https://platform.wathba.info/oauth/authorize" and
-            .token_endpoint == "https://api.wathba.info/v1/oauth/token" and
-            .registration_endpoint == "https://api.wathba.info/v1/oauth/register" and
-            (.scopes_supported | index("mcp:read") != null) and
-            (.code_challenge_methods_supported | index("S256") != null)
-          ' <<<"$authorization"
+      - name: Install into Claude Code and Codex (DEV build)
+        run: scripts/smoke-hosts.sh "$RUNNER_TEMP/dev" dev
+
+      - name: Install into Claude Code and Codex (production build)
+        run: scripts/smoke-hosts.sh "$RUNNER_TEMP/prod" prod
+
+      - name: Live OAuth metadata (DEV and production)
+        run: |
+          scripts/check-oauth.sh dev
+          scripts/check-oauth.sh prod

@@ -1,0 +1,101 @@
+name: Publish DEV marketplace
+
+# Builds the DEV marketplace from main and publishes it to the dev branch,
+# which members add with `wathba-org/wathba-plugin#dev` (Claude Code) or
+# `--ref dev` (Codex). Only this workflow writes to dev.
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - plugin.config.json
+      - src/**
+      - scripts/**
+      - LICENSE
+      - .github/workflows/publish-dev.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-dev
+  cancel-in-progress: false
+
+env:
+  CLAUDE_CODE_VERSION: "2.1.287"
+  CODEX_VERSION: "0.159.2"
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "24"
+
+      - name: Install the host CLIs used as validators
+        run: npm install --global --no-fund --no-audit "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}" "@openai/codex@${CODEX_VERSION}"
+
+      - name: Skip when the DEV content is unchanged
+        id: digest
+        run: |
+          set -euo pipefail
+          digest="$(node scripts/sync.mjs digest --target dev)"
+          echo "digest=$digest" >>"$GITHUB_OUTPUT"
+          published=""
+          if git ls-remote --exit-code --heads origin dev >/dev/null; then
+            git fetch --quiet origin dev
+            published="$(git show origin/dev:plugins/wathba-dev/release.json | jq -r '.contentDigest')"
+          fi
+          if [[ "$published" == "$digest" ]]; then
+            echo "DEV content $digest is already published."
+            echo "changed=false" >>"$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >>"$GITHUB_OUTPUT"
+          fi
+
+      - name: Build and verify the DEV marketplace
+        if: steps.digest.outputs.changed == 'true'
+        run: |
+          set -euo pipefail
+          base="$(jq -r '.version' plugin.config.json)"
+          version="${base}-dev.${GITHUB_RUN_NUMBER}"
+          node scripts/sync.mjs build --target dev --out "$RUNNER_TEMP/dev" --version "$version"
+          scripts/smoke-hosts.sh "$RUNNER_TEMP/dev" dev
+          scripts/check-oauth.sh dev
+          echo "VERSION=$version" >>"$GITHUB_ENV"
+
+      - name: Commit to the dev branch
+        if: steps.digest.outputs.changed == 'true'
+        run: |
+          set -euo pipefail
+          branch="$RUNNER_TEMP/dev-branch"
+          # Work detached and push HEAD:dev, so no local branch can collide.
+          if git ls-remote --exit-code --heads origin dev >/dev/null; then
+            git worktree add --detach "$branch" origin/dev
+          else
+            git worktree add --detach "$branch"
+            git -C "$branch" switch --orphan dev-publish
+          fi
+          find "$branch" -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          cp -R "$RUNNER_TEMP/dev/." "$branch/"
+          git -C "$branch" add -A
+          if git -C "$branch" diff --cached --quiet; then
+            echo "Nothing to publish."
+            exit 0
+          fi
+          git -C "$branch" -c user.name="github-actions[bot]" \
+            -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit --quiet -m "publish DEV ${VERSION} from ${GITHUB_SHA::12}"
+          git -C "$branch" push origin HEAD:refs/heads/dev
+          echo "Published wathba-dev ${VERSION} (${{ steps.digest.outputs.digest }})."
