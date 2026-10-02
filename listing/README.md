@@ -13,11 +13,10 @@ in this repository.
 
 ## Blockers before any directory submission
 
-1. A public terms of service page on `wathba.sa` (none exists yet). Add its URL
-   to `plugin.config.json` as `publisher.termsOfServiceURL` and to each form.
-   The privacy policy is https://wathba.sa/en/privacy (Arabic:
-   https://wathba.sa/ar/privacy) and the support contact is juriba@wathba.sa;
-   both are already in the generated metadata.
+1. Public privacy policy and terms of service pages for the plugin. Add their
+   URLs to `plugin.config.json` as `publisher.privacyPolicyURL` and
+   `publisher.termsOfServiceURL` (both omitted until set) and to each form. The
+   support contact, juriba@wathba.sa, is already in the generated metadata.
 2. A dedicated reviewer member account with a sandbox project, shared only
    through each directory's form.
 3. Recorded acceptance runs for the hosts being listed (`docs/acceptance/`).
