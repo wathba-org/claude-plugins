@@ -3,7 +3,7 @@
   "name": "io.github.wathba-org/wathba",
   "title": "Wathba",
   "description": "Saudi payments, OTP/SMS, KYC, ZATCA e-invoicing and shipping for AI coding agents.",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "websiteUrl": "https://platform.wathba.info/docs/mcp",
   "repository": {
     "url": "https://github.com/wathba-org/wathba-plugin",

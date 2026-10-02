@@ -92,13 +92,33 @@ async function loadConfig() {
 }
 
 async function loadSources(config) {
-  const icon = await readFile(join(ROOT, config.branding.icon));
-  if (sha256(icon) !== config.branding.iconSha256)
-    fail("icon", "src icon does not match branding.iconSha256");
+  const icons = {};
+  for (const theme of ["light", "dark"]) {
+    const { source, sha256: expected } = config.branding.icons[theme];
+    const bytes = await readFile(join(ROOT, source));
+    if (sha256(bytes) !== expected)
+      fail("icon", `${source} does not match branding.icons.${theme}.sha256`);
+    checkListingImage(source, bytes);
+    icons[theme] = bytes;
+  }
   const skill = await readFile(join(ROOT, config.skill.source), "utf8");
   const devReadme = await readFile(join(ROOT, "src/dev-branch-README.md"), "utf8");
   const license = await readFile(join(ROOT, "LICENSE"), "utf8");
-  return { icon, skill, devReadme, license };
+  return { icons, skill, devReadme, license };
+}
+
+// Listing images must be square PNGs, 48 to 4096 pixels, at most 5 MiB
+// (OpenAI plugin submission requirements; hosts accept the same files).
+function checkListingImage(path, bytes) {
+  const signature = "89504e470d0a1a0a";
+  if (bytes.subarray(0, 8).toString("hex") !== signature || bytes.toString("ascii", 12, 16) !== "IHDR")
+    fail("icon", `${path} must be a PNG`);
+  const width = bytes.readUInt32BE(16);
+  const height = bytes.readUInt32BE(20);
+  if (width !== height) fail("icon", `${path} must be square (is ${width}x${height})`);
+  if (width < 48 || width > 4096)
+    fail("icon", `${path} must be 48 to 4096 pixels wide (is ${width})`);
+  if (bytes.length > 5 * 1024 * 1024) fail("icon", `${path} must be at most 5 MiB`);
 }
 
 function pluginReadme(config, target, mcpUrl, docsUrl, targetName) {
@@ -254,9 +274,10 @@ function buildFiles(config, sources, targetName, version) {
             capabilities: config.codex.capabilities,
             websiteURL: docsUrl,
             brandColor: config.branding.brandColor,
-            composerIcon: "./assets/favicon.png",
-            logo: "./assets/favicon.png",
-            logoDark: "./assets/favicon.png",
+            composerIcon: "./assets/wathba-icon-light.png",
+            composerIconDark: "./assets/wathba-icon-dark.png",
+            logo: "./assets/wathba-icon-light.png",
+            logoDark: "./assets/wathba-icon-dark.png",
             defaultPrompt: config.codex.defaultPrompt,
           },
         },
@@ -293,7 +314,8 @@ function buildFiles(config, sources, targetName, version) {
     }),
   );
   files.set(`${pluginDir}/skills/${SKILL_NAME}/SKILL.md`, sources.skill);
-  files.set(`${pluginDir}/assets/favicon.png`, sources.icon);
+  files.set(`${pluginDir}/assets/wathba-icon-light.png`, sources.icons.light);
+  files.set(`${pluginDir}/assets/wathba-icon-dark.png`, sources.icons.dark);
   files.set(
     `${pluginDir}/README.md`,
     pluginReadme(config, target, mcpUrl, docsUrl, targetName),
@@ -407,7 +429,7 @@ function validate(config, targetName, files, version) {
     fail("identity", "Codex displayName differs from target");
   if ((openai.defaultPrompt ?? []).length > 3)
     fail("schema", "Codex allows at most 3 default prompts");
-  for (const key of ["composerIcon", "logo", "logoDark"]) {
+  for (const key of ["composerIcon", "composerIconDark", "logo", "logoDark"]) {
     const path = openai[key];
     if (!path?.startsWith("./") || !files.has(`${pluginDir}/${path.slice(2)}`))
       fail("paths", `Codex ${key} must be a ./ path inside the plugin`);
@@ -464,9 +486,11 @@ function validate(config, targetName, files, version) {
   const contract = parse(files, "contract.json");
   if (contract.mcpEndpoint !== mcpUrl || contract.plugin !== target.plugin)
     fail("contract", "contract.json identity differs");
-  const icon = files.get(`${pluginDir}/assets/favicon.png`);
-  if (!Buffer.isBuffer(icon) || sha256(icon) !== config.branding.iconSha256)
-    fail("icon", "packaged icon does not match branding.iconSha256");
+  for (const theme of ["light", "dark"]) {
+    const icon = files.get(`${pluginDir}/assets/wathba-icon-${theme}.png`);
+    if (!Buffer.isBuffer(icon) || sha256(icon) !== config.branding.icons[theme].sha256)
+      fail("icon", `packaged ${theme} icon does not match branding.icons.${theme}.sha256`);
+  }
 
   // Registry entry (production only).
   if (targetName === "prod") {
