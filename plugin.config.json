@@ -95,6 +95,7 @@
       "apiOrigin": "https://apidev.wathba.info",
       "portalOrigin": "https://platformdev.wathba.info",
       "shortDescription": "Wathba DEV environment",
+      "composerIconTheme": "dark",
       "icons": {
         "light": {
           "source": "src/assets/wathba-icon-dev-light.png",

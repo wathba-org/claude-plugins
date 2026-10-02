@@ -85,6 +85,8 @@ async function loadConfig() {
   for (const name of ["prod", "dev"]) {
     if (shortDescriptionFor(config, name).length > 30)
       fail("config", `${name} shortDescription must be at most 30 characters (OpenAI listing subtitle)`);
+    if (!["light", "dark"].includes(composerIconThemeFor(config, name)))
+      fail("config", `${name}.composerIconTheme must be "light" or "dark"`);
   }
   // The production package is committed at the root; check and version-rule
   // must always compare against it, so the field cannot be dropped.
@@ -100,6 +102,11 @@ function shortDescriptionFor(config, targetName) {
 
 function iconsFor(config, targetName) {
   return config.targets[targetName].icons ?? config.branding.icons;
+}
+
+// Codex shows one composer icon in both themes (it ignores composerIconDark).
+function composerIconThemeFor(config, targetName) {
+  return config.targets[targetName].composerIconTheme ?? "light";
 }
 
 async function loadSources(config) {
@@ -295,7 +302,7 @@ function buildFiles(config, sources, targetName, version) {
             // Omitted from the JSON until the config sets it.
             termsOfServiceURL: config.publisher.termsOfServiceURL,
             brandColor: config.branding.brandColor,
-            composerIcon: "./assets/wathba-icon-light.png",
+            composerIcon: `./assets/wathba-icon-${composerIconThemeFor(config, targetName)}.png`,
             composerIconDark: "./assets/wathba-icon-dark.png",
             logo: "./assets/wathba-icon-light.png",
             logoDark: "./assets/wathba-icon-dark.png",
