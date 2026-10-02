@@ -82,8 +82,10 @@ async function loadConfig() {
       fail("config", `default prompt over 128 characters: ${prompt}`);
   if (config.registryDescription.length > 100)
     fail("config", "registryDescription must be at most 100 characters");
-  if (config.shortDescription.length > 30)
-    fail("config", "shortDescription must be at most 30 characters (OpenAI listing subtitle)");
+  for (const name of ["prod", "dev"]) {
+    if (shortDescriptionFor(config, name).length > 30)
+      fail("config", `${name} shortDescription must be at most 30 characters (OpenAI listing subtitle)`);
+  }
   // The production package is committed at the root; check and version-rule
   // must always compare against it, so the field cannot be dropped.
   if (config.rootTarget !== "prod")
@@ -91,15 +93,27 @@ async function loadConfig() {
   return config;
 }
 
+// A target may override the subtitle and icons (DEV carries a DEV badge).
+function shortDescriptionFor(config, targetName) {
+  return config.targets[targetName].shortDescription ?? config.shortDescription;
+}
+
+function iconsFor(config, targetName) {
+  return config.targets[targetName].icons ?? config.branding.icons;
+}
+
 async function loadSources(config) {
   const icons = {};
-  for (const theme of ["light", "dark"]) {
-    const { source, sha256: expected } = config.branding.icons[theme];
-    const bytes = await readFile(join(ROOT, source));
-    if (sha256(bytes) !== expected)
-      fail("icon", `${source} does not match branding.icons.${theme}.sha256`);
-    checkListingImage(source, bytes);
-    icons[theme] = bytes;
+  for (const name of ["prod", "dev"]) {
+    icons[name] = {};
+    for (const theme of ["light", "dark"]) {
+      const { source, sha256: expected } = iconsFor(config, name)[theme];
+      const bytes = await readFile(join(ROOT, source));
+      if (sha256(bytes) !== expected)
+        fail("icon", `${source} does not match its ${name} ${theme} sha256`);
+      checkListingImage(source, bytes);
+      icons[name][theme] = bytes;
+    }
   }
   const skill = await readFile(join(ROOT, config.skill.source), "utf8");
   const devReadme = await readFile(join(ROOT, "src/dev-branch-README.md"), "utf8");
@@ -271,7 +285,7 @@ function buildFiles(config, sources, targetName, version) {
         "com.openai": {
           interface: {
             displayName: target.displayName,
-            shortDescription: config.shortDescription,
+            shortDescription: shortDescriptionFor(config, targetName),
             longDescription: description,
             developerName: config.publisher.name,
             category: config.codex.category,
@@ -321,8 +335,8 @@ function buildFiles(config, sources, targetName, version) {
     }),
   );
   files.set(`${pluginDir}/skills/${SKILL_NAME}/SKILL.md`, sources.skill);
-  files.set(`${pluginDir}/assets/wathba-icon-light.png`, sources.icons.light);
-  files.set(`${pluginDir}/assets/wathba-icon-dark.png`, sources.icons.dark);
+  files.set(`${pluginDir}/assets/wathba-icon-light.png`, sources.icons[targetName].light);
+  files.set(`${pluginDir}/assets/wathba-icon-dark.png`, sources.icons[targetName].dark);
   files.set(
     `${pluginDir}/README.md`,
     pluginReadme(config, target, mcpUrl, docsUrl, targetName),
@@ -495,7 +509,7 @@ function validate(config, targetName, files, version) {
     fail("contract", "contract.json identity differs");
   for (const theme of ["light", "dark"]) {
     const icon = files.get(`${pluginDir}/assets/wathba-icon-${theme}.png`);
-    if (!Buffer.isBuffer(icon) || sha256(icon) !== config.branding.icons[theme].sha256)
+    if (!Buffer.isBuffer(icon) || sha256(icon) !== iconsFor(config, targetName)[theme].sha256)
       fail("icon", `packaged ${theme} icon does not match branding.icons.${theme}.sha256`);
   }
 

@@ -93,7 +93,18 @@
       "displayName": "Wathba Dev",
       "serverKey": "wathba-dev",
       "apiOrigin": "https://apidev.wathba.info",
-      "portalOrigin": "https://platformdev.wathba.info"
+      "portalOrigin": "https://platformdev.wathba.info",
+      "shortDescription": "Wathba DEV environment",
+      "icons": {
+        "light": {
+          "source": "src/assets/wathba-icon-dev-light.png",
+          "sha256": "05990e2ad7de5f915423c648536310572b0252b0e9e8e776b278fa47fcbba78e"
+        },
+        "dark": {
+          "source": "src/assets/wathba-icon-dev-dark.png",
+          "sha256": "ad7148735a4ba0c17690fc5c8e57f0d0a3dbe61eedf9566bddc5cb8c97522c22"
+        }
+      }
     }
   }
 }
