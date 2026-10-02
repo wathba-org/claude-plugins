@@ -171,7 +171,11 @@ function buildFiles(config, sources, targetName, version) {
   const pluginDir = `plugins/${target.plugin}`;
   const mcpUrl = `${target.apiOrigin}/mcp`;
   const docsUrl = `${target.portalOrigin}/docs/mcp`;
-  const author = { name: config.publisher.name, url: config.publisher.url };
+  const author = {
+    name: config.publisher.name,
+    email: config.publisher.email,
+    url: config.publisher.url,
+  };
   const description =
     targetName === "prod"
       ? config.description
@@ -273,6 +277,9 @@ function buildFiles(config, sources, targetName, version) {
             category: config.codex.category,
             capabilities: config.codex.capabilities,
             websiteURL: docsUrl,
+            privacyPolicyURL: config.publisher.privacyPolicyURL,
+            // Omitted from the JSON until the config sets it.
+            termsOfServiceURL: config.publisher.termsOfServiceURL,
             brandColor: config.branding.brandColor,
             composerIcon: "./assets/wathba-icon-light.png",
             composerIconDark: "./assets/wathba-icon-dark.png",
