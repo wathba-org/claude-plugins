@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "wathba-dev",
-  "version": "2.0.3-dev.5",
+  "version": "2.0.4-dev.6",
   "description": "Connect your coding agent to the Wathba development environment over MCP: projects, notices, pinned integration guides, sandbox project creation and member-confirmed API upgrades for Saudi payments, OTP/SMS, KYC, ZATCA e-invoicing and shipping.",
   "author": {
     "name": "Wathba",
@@ -34,7 +34,6 @@
           "Write"
         ],
         "websiteURL": "https://platformdev.wathba.info/docs/mcp",
-        "privacyPolicyURL": "https://wathba.sa/en/privacy",
         "brandColor": "#FF5B05",
         "composerIcon": "./assets/wathba-icon-light.png",
         "composerIconDark": "./assets/wathba-icon-dark.png",
